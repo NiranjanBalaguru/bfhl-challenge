@@ -57,13 +57,14 @@ function buildGraphGroups(validEdges) {
   const allNodes = new Set();
 
   for (const { parent, child } of validEdges) {
-    allNodes.add(parent);
-    allNodes.add(child);
 
     if (!parentOf.has(parent)) parentOf.set(parent, []);
     if (!childOf.has(child)) {
       childOf.set(child, parent);
       parentOf.get(parent).push(child);
+
+      allNodes.add(parent);
+      allNodes.add(child);
     }
   }
   const roots = [...allNodes].filter(n => !childOf.has(n)).sort();
