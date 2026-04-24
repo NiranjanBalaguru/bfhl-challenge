@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: bfhl-api
+    env: node
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Fill in your real details:
+      - key: USER_ID
+        value: fullname_ddmmyyyy
+      - key: EMAIL_ID
+        value: your.email@srmist.edu.in
+      - key: ROLL_NUMBER
+        value: RA2211003010001

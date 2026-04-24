@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BFHL - Node Hierarchy Viewer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #222;
+      min-height: 100vh;
+      padding: 30px 16px;
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 4px;
+    }
+
+    .tagline {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .box {
+      background: #fff;
+      border: 1px solid #dde1e8;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .box h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      color: #222;
+      background: #fafafa;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: #4a6cf7;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 9px 22px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+
+    .btn-primary {
+      background: #4a6cf7;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #3a5ce5;
+    }
+
+    .btn-primary:disabled {
+      background: #9aabf7;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #eef0f5;
+      color: #444;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e3ec;
+    }
+
+    /* Error */
+    .error-msg {
+      display: none;
+      background: #fff3f4;
+      border: 1px solid #f5c2c7;
+      color: #b02a37;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    /* Identity pills */
+    .identity-grid {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .identity-pill {
+      background: #f5f7ff;
+      border: 1px solid #dde3ff;
+      border-radius: 6px;
+      padding: 8px 14px;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .identity-pill .key {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #888;
+      margin-bottom: 3px;
+    }
+
+    .identity-pill .val {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #222;
+      word-break: break-all;
+    }
+
+    /* Summary */
+    .summary-grid {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      flex: 1;
+      min-width: 130px;
+      background: #f9fafe;
+      border: 1px solid #e0e5f5;
+      border-radius: 6px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+
+    .stat .num {
+      font-size: 30px;
+      font-weight: 700;
+      color: #4a6cf7;
+    }
+
+    .stat .lbl {
+      font-size: 11px;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+    }
+
+    .stat .sub {
+      font-size: 12px;
+      color: #4a6cf7;
+      margin-top: 4px;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* Hierarchy cards */
+    .hier-card {
+      border: 1px solid #e0e4ee;
+      border-radius: 7px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .hier-card.cycle-card {
+      border-color: #f5c2c7;
+    }
+
+    .hier-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      cursor: pointer;
+      background: #fafbff;
+      user-select: none;
+    }
+
+    .hier-head:hover {
+      background: #f3f5ff;
+    }
+
+    .hier-card.cycle-card .hier-head {
+      background: #fff8f8;
+    }
+
+    .hier-card.cycle-card .hier-head:hover {
+      background: #fff0f1;
+    }
+
+    .root-box {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      background: #e8edff;
+      color: #4a6cf7;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .cycle-card .root-box {
+      background: #fde8ea;
+      color: #c0392b;
+    }
+
+    .hier-info {
+      flex: 1;
+    }
+
+    .hier-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #222;
+    }
+
+    .hier-sub {
+      font-size: 12px;
+      color: #888;
+      margin-top: 1px;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .badge-cycle {
+      background: #fde8ea;
+      color: #c0392b;
+    }
+
+    .badge-tree {
+      background: #e8f4ec;
+      color: #1e7e34;
+    }
+
+    .toggle-icon {
+      font-size: 12px;
+      color: #aaa;
+      transition: transform 0.2s;
+    }
+
+    .hier-card.open .toggle-icon {
+      transform: rotate(90deg);
+    }
+
+    .hier-body {
+      display: none;
+      padding: 12px 14px;
+      border-top: 1px solid #eee;
+      background: #fff;
+    }
+
+    .hier-card.open .hier-body {
+      display: block;
+    }
+
+    /* Tree */
+    .tree {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .tree ul {
+      list-style: none;
+      padding-left: 18px;
+      border-left: 1px dashed #ccc;
+      margin-left: 6px;
+    }
+
+    .tree li {
+      padding-left: 8px;
+      position: relative;
+    }
+
+    .tree li::before {
+      content: '—';
+      position: absolute;
+      left: -10px;
+      color: #ccc;
+    }
+
+    .node-name {
+      display: inline-block;
+      background: #f0f4ff;
+      border: 1px solid #d5deff;
+      border-radius: 4px;
+      padding: 1px 8px;
+      color: #3a5ce5;
+      font-weight: 600;
+    }
+
+    .node-name.leaf {
+      background: #f0faf4;
+      border-color: #b6dfc4;
+      color: #1e7e34;
+    }
+
+    /* Tags */
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .tag {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 5px;
+    }
+
+    .tag-invalid {
+      background: #fff0f1;
+      border: 1px solid #f5c2c7;
+      color: #b02a37;
+    }
+
+    .tag-dup {
+      background: #fff8ec;
+      border: 1px solid #fde5b0;
+      color: #a05c00;
+    }
+
+    .none-msg {
+      font-size: 13px;
+      color: #aaa;
+      font-style: italic;
+    }
+
+    /* JSON */
+    pre.json-out {
+      display: none;
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+      margin-top: 10px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    pre.json-out.show {
+      display: block;
+    }
+
+    #results {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <h1>BFHL — Node Hierarchy Viewer</h1>
+    <p class="tagline">Enter node edges to analyse tree structures and detect cycles.</p>
+
+    <!-- Input -->
+    <div class="box">
+      <h2>Input</h2>
+
+      <label>API Base URL</label>
+      <input type="text" id="apiUrl" value="http://localhost:3000/bfhl"
+        placeholder="https://your-api.onrender.com/bfhl" />
+
+      <br /><br />
+
+      <label>Node Edges <span style="color:#aaa;font-size:12px;">(comma or newline separated)</span></label>
+      <textarea id="inputData" placeholder="e.g. A->B, A->C, B->D, X->Y, Y->Z, Z->X, hello"></textarea>
+
+      <div class="row">
+        <button class="btn-primary" id="submitBtn" onclick="submitData()">Submit</button>
+        <button class="btn-secondary" onclick="loadExample()">Load Example</button>
+        <button class="btn-secondary" onclick="clearAll()">Clear</button>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- Results -->
+    <div id="results">
+
+      <div class="box">
+        <h2>Identity</h2>
+        <div class="identity-grid" id="identityGrid"></div>
+      </div>
+
+      <div class="box">
+        <h2>Summary</h2>
+        <div class="summary-grid" id="summaryGrid"></div>
+      </div>
+
+      <div class="box">
+        <h2>Hierarchies</h2>
+        <div id="hierList"></div>
+      </div>
+
+      <div class="box">
+        <h2>Invalid Entries</h2>
+        <div id="invalidList"></div>
+      </div>
+
+      <div class="box">
+        <h2>Duplicate Edges</h2>
+        <div id="dupList"></div>
+      </div>
+
+      <div class="box">
+        <h2>Raw JSON Response</h2>
+        <button class="btn-secondary" onclick="toggleJson()" style="font-size:12px;padding:6px 14px;">Show /
+          Hide</button>
+        <pre class="json-out" id="jsonOut"></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const EXAMPLE = "A->B, A->C, B->D, C->E, E->F, X->Y, Y->Z, Z->X, P->Q, Q->R, G->H, G->H, G->I, hello, 1->2, A->";
+
+    function loadExample() {
+      document.getElementById("inputData").value = EXAMPLE;
+    }
+
+    function clearAll() {
+      document.getElementById("inputData").value = "";
+      document.getElementById("results").style.display = "none";
+      hideError();
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("errorMsg");
+      el.textContent = "Error: " + msg;
+      el.style.display = "block";
+    }
+
+    function hideError() {
+      document.getElementById("errorMsg").style.display = "none";
+    }
+
+    function parseInput(raw) {
+      return raw.split(/[\n,]+/).map(s => s.trim()).filter(s => s.length > 0);
+    }
+
+    async function submitData() {
+      hideError();
+      const url = document.getElementById("apiUrl").value.trim();
+      const raw = document.getElementById("inputData").value.trim();
+
+      if (!url) return showError("Please enter an API URL.");
+      if (!raw) return showError("Please enter at least one edge.");
+
+      const data = parseInput(raw);
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.textContent = "Loading...";
+
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data })
+        });
+
+        if (!res.ok) throw new Error("HTTP " + res.status + " — " + res.statusText);
+
+        const json = await res.json();
+        renderResults(json);
+      } catch (e) {
+        showError(e.message || "Could not reach the API. Check the URL and try again.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Submit";
+      }
+    }
+
+    function renderResults(d) {
+      document.getElementById("results").style.display = "block";
+      document.getElementById("results").scrollIntoView({ behavior: "smooth" });
+
+      // Identity
+      const fields = [
+        { key: "User ID", val: d.user_id },
+        { key: "Email", val: d.email_id },
+        { key: "Roll Number", val: d.college_roll_number }
+      ];
+      document.getElementById("identityGrid").innerHTML = fields.map(f =>
+        `<div class="identity-pill">
+        <div class="key">${f.key}</div>
+        <div class="val">${f.val}</div>
+      </div>`
+      ).join("");
+
+      // Summary
+      const s = d.summary;
+      const deepTree = d.hierarchies.find(h => h.root === s.largest_tree_root);
+      document.getElementById("summaryGrid").innerHTML = `
+      <div class="stat">
+        <div class="num">${s.total_trees}</div>
+        <div class="lbl">Valid Trees</div>
+      </div>
+      <div class="stat">
+        <div class="num">${s.total_cycles}</div>
+        <div class="lbl">Cycles</div>
+      </div>
+      <div class="stat">
+        <div class="num" style="font-size:24px">${s.largest_tree_root || "—"}</div>
+        <div class="lbl">Deepest Root</div>
+        ${deepTree ? `<div class="sub">depth ${deepTree.depth}</div>` : ""}
+      </div>
+    `;
+
+      // Hierarchies
+      const hierHTML = d.hierarchies.map((h, i) => {
+        const isCycle = !!h.has_cycle;
+        return `
+        <div class="hier-card ${isCycle ? "cycle-card" : ""}" id="hc-${i}">
+          <div class="hier-head" onclick="toggleCard(${i})">
+            <div class="root-box">${h.root}</div>
+            <div class="hier-info">
+              <div class="hier-title">Root: ${h.root}</div>
+              <div class="hier-sub">${isCycle ? "Cyclic group detected" : "Depth: " + h.depth}</div>
+            </div>
+            <span class="badge ${isCycle ? "badge-cycle" : "badge-tree"}">${isCycle ? "Cycle" : "Tree"}</span>
+            <span class="toggle-icon">▶</span>
+          </div>
+          <div class="hier-body">
+            ${isCycle
+            ? `<p style="font-size:13px;color:#888;">A cycle was detected. No tree structure available.</p>`
+            : renderTreeHTML(h.tree, h.root)
+          }
+          </div>
+        </div>
+      `;
+      }).join("") || `<p class="none-msg">No hierarchies found.</p>`;
+
+      document.getElementById("hierList").innerHTML = hierHTML;
+
+      // Invalid
+      const inv = d.invalid_entries;
+      document.getElementById("invalidList").innerHTML = inv.length
+        ? `<div class="tag-list">${inv.map(e => `<span class="tag tag-invalid">${esc(e)}</span>`).join("")}</div>`
+        : `<p class="none-msg">None — all entries valid.</p>`;
+
+      // Dups
+      const dups = d.duplicate_edges;
+      document.getElementById("dupList").innerHTML = dups.length
+        ? `<div class="tag-list">${dups.map(e => `<span class="tag tag-dup">${esc(e)}</span>`).join("")}</div>`
+        : `<p class="none-msg">No duplicate edges found.</p>`;
+
+      // JSON
+      document.getElementById("jsonOut").textContent = JSON.stringify(d, null, 2);
+      document.getElementById("jsonOut").classList.remove("show");
+    }
+
+    function renderTreeHTML(treeObj, root) {
+      function buildUL(obj) {
+        const keys = Object.keys(obj);
+        if (!keys.length) return "";
+        return `<ul>${keys.map(k => {
+          const isLeaf = Object.keys(obj[k]).length === 0;
+          return `<li><span class="node-name ${isLeaf ? "leaf" : ""}">${k}</span>${buildUL(obj[k])}</li>`;
+        }).join("")}</ul>`;
+      }
+
+      const children = treeObj[root] || {};
+      return `<div class="tree">
+      <span class="node-name">${root}</span>
+      ${buildUL(children)}
+    </div>`;
+    }
+
+    function toggleCard(i) {
+      document.getElementById("hc-" + i).classList.toggle("open");
+    }
+
+    function toggleJson() {
+      document.getElementById("jsonOut").classList.toggle("show");
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+  </script>
+</body>
+
+</html>
