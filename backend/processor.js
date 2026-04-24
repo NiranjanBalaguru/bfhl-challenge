@@ -52,7 +52,7 @@ function partitionEntries(data) {
   return { invalid_entries, duplicate_edges, validEdges };
 }
 function buildGraphGroups(validEdges) {
-  const childOf = new Map();)
+  const childOf = new Map();
   const parentOf = new Map();
   const allNodes = new Set();
 
