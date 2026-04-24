@@ -18,7 +18,7 @@ const IDENTITY = {
 };
 
 // ── POST /bfhl ────────────────────────────────────────────────────────────────
-app.post('/bfhl', (req, res) => {
+app.post('/', (req, res) => {
   try {
     const { data } = req.body;
 
