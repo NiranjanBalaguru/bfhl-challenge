@@ -133,15 +133,23 @@ function hasCycleInGroup(root, parentOf, groupNodes) {
     return false;
   }
 
-  return dfs(root);
+  for (const node of groupNodes) {
+    if(!visited.has(node)) {
+      if (dfs(node)) return true;
+    }
+  }
+  return false;
 }
 
-function buildChildren(node, parentOf) {
+function buildChildren(node, parentOf, visited = new Set()) {
+  if (visited.has(node)) return {};
+  visited.add(node);
   const obj = {};
   const children = parentOf.get(node) || [];
   for (const child of children) {
     obj[child] = buildChildren(child, parentOf);
   }
+  visited.delete(node);
   return obj;
 }
 
@@ -149,10 +157,15 @@ function buildNestedTree(root, parentOf) {
   return { [root]: buildChildren(root, parentOf) };
 }
 
-function calcDepth(node, parentOf) {
+function calcDepth(node, parentOf, memo = {}) {
+  if (memo[node]) return memo[node];
   const children = parentOf.get(node) || [];
-  if (children.length === 0) return 1;
-  return 1 + Math.max(...children.map(c => calcDepth(c, parentOf)));
+  if (children.length === 0){
+    memo[node] = 1;
+    return 1;
+  }
+  return 1 + Math.max(...children.map(c => calcDepth(c, parentOf,memo)));
+  return memo[node];
 }
 
 
@@ -173,8 +186,8 @@ function buildHierarchies(validEdges) {
     if (cycleDetected) {
       hierarchies.push({ root, tree: {}, has_cycle: true });
     } else {
-      const tree = buildNestedTree(root, parentOf);
-      const depth = calcDepth(root, parentOf);
+      const tree = { [root]: buildNestedTree(root, parentOf)};
+      const depth = calcDepth(root, parentOf, {});
       hierarchies.push({ root, tree, depth });
     }
   }
