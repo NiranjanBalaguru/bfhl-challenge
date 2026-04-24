@@ -7,12 +7,9 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
-      # Fill in your real details:
       - key: USER_ID
-        value: fullname_ddmmyyyy
+        value: niranjanBalaguru_22012006
       - key: EMAIL_ID
-        value: your.email@srmist.edu.in
+        value: nb1999@srmist.edu.in
       - key: ROLL_NUMBER
-        value: RA2211003010001
+        value: RA2311003010050
